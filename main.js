@@ -1,8 +1,8 @@
 (function(){const s=document.createElement("link").relList;if(s&&s.supports&&s.supports("modulepreload"))return;for(const e of document.querySelectorAll('link[rel="modulepreload"]'))c(e);new MutationObserver(e=>{for(const o of e)if(o.type==="childList")for(const d of o.addedNodes)d.tagName==="LINK"&&d.rel==="modulepreload"&&c(d)}).observe(document,{childList:!0,subtree:!0});function t(e){const o={};return e.integrity&&(o.integrity=e.integrity),e.referrerPolicy&&(o.referrerPolicy=e.referrerPolicy),e.crossOrigin==="use-credentials"?o.credentials="include":e.crossOrigin==="anonymous"?o.credentials="omit":o.credentials="same-origin",o}function c(e){if(e.ep)return;e.ep=!0;const o=t(e);fetch(e.href,o)}})();document.querySelector("#app").innerHTML=`
   <section class="shell">
-    <header><span class="eyebrow">LOCAL · PRIVATE · OFFLINE</span><h1>AI 手机备份转换器</h1><p>网站一 → 网站二。文件只在当前浏览器处理，不会上传。</p></header>
+    <header><span class="eyebrow">LOCAL · PRIVATE · OFFLINE · V3</span><h1>糯叽机 → Float 备份转换器</h1><p>糯叽机 → Float。文件只在当前浏览器处理，不会上传。</p></header>
     <div class="card">
-      <label class="drop" id="drop"><input id="file" type="file" accept=".gz,application/gzip"><strong>选择网站一 .gz 备份</strong><span id="fileName">支持大型备份，建议使用最新版 Chrome / Edge</span></label>
+      <label class="drop" id="drop"><input id="file" type="file" accept=".gz,application/gzip"><strong>选择糯叽机 .gz 备份</strong><span id="fileName">支持大型备份，建议使用最新版 Chrome / Edge</span></label>
       <div class="grid">
         <label><span>剧情聊天导入方式</span><select id="storyMode"><option value="both">剧情 App + 线下消息</option><option value="offline">仅线下消息</option><option value="story">仅剧情 App</option></select></label>
         <label><span>API Key</span><select id="keyMode"><option value="full">完整迁移</option><option value="blank">留空（安全模式）</option></select></label>
@@ -11,6 +11,6 @@
       <button id="convert" disabled>开始转换</button>
       <div class="progress" hidden><div id="bar"></div></div><pre id="log">等待选择备份…</pre>
     </div>
-    <footer>建议先在网站二的空白测试环境导入并核对，再用于正式数据。</footer>
+    <footer>建议先在 Float 的空白测试环境导入并核对，再用于正式数据。</footer>
   </section>`;const u=document.querySelector("#file"),i=document.querySelector("#convert"),l=document.querySelector("#log"),p=document.querySelector(".progress"),a=document.querySelector("#bar");let n;u.addEventListener("change",()=>{n=u.files?.[0],i.disabled=!n,document.querySelector("#fileName").textContent=n?`${n.name} · ${(n.size/1048576).toFixed(1)} MB`:"未选择"});i.addEventListener("click",async()=>{if(!n)return;i.disabled=!0,p.hidden=!1,a.style.width="3%",l.textContent="正在读取备份…";const r=new Worker(new URL(""+new URL("worker.js",import.meta.url).href,import.meta.url),{type:"module"});r.onmessage=({data:t})=>{if(t.type==="progress"&&(a.style.width=`${t.percent}%`,l.textContent=t.message),t.type==="done"){const c=new Blob([t.buffer],{type:"application/zip"}),e=document.createElement("a");e.href=URL.createObjectURL(c),e.download=t.filename,e.click(),setTimeout(()=>URL.revokeObjectURL(e.href),3e4),a.style.width="100%",l.textContent=t.report.join(`
 `),i.disabled=!1,r.terminate()}t.type==="error"&&(l.textContent=`转换失败：${t.message}`,i.disabled=!1,r.terminate())},r.onerror=t=>{l.textContent=`转换失败：${t.message}`,i.disabled=!1,r.terminate()};const s=await n.arrayBuffer();r.postMessage({buffer:s,options:{storyMode:document.querySelector("#storyMode").value,keyMode:document.querySelector("#keyMode").value,stripStatus:document.querySelector("#stripStatus").checked,includeForum:document.querySelector("#includeForum").checked}},[s])});
