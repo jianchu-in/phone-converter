@@ -3,4 +3,588 @@
 `),tags:tt(e.aliases),createdAt:gt(e.createdAt),updatedAt:gt(e.updatedAt||e.createdAt)}))}function Vs(t){const r=Date.now();return tt(t.worldBooks).map((e,s)=>({id:String(e.id||ht("worldbook",s)),name:String(e.title||e.name||`世界书${s+1}`),description:String(e.description||""),createdAt:r,updatedAt:r,entries:tt(e.entries).map((i,n)=>({uid:String(i.uid||ht("wb_entry",`${s}_${n}`)),key:tt(i.keys).join(","),content:String(i.content||""),comment:String(i.name||""),use_regex:i.type==="regex",disable:i.enabled===!1,constant:i.constant===!0,position:"before_an",probability:100,useProbability:!1,insertion_order:Number(i.priority||n)}))}))}function Qs(t,r,e){const s=new Set(r.map(c=>c.id)),i=tt(t.groupChats)[0],n=tt(i?.groups),o=new Set(n.map(c=>String(c.id))),a=r.map(c=>({id:`contact_${c.id}`,characterId:c.id,addedAt:c.createdAt})),h=r.map(c=>({id:`session_${c.id}`,contactId:c.id,unreadCount:0,updatedAt:c.updatedAt,isPinned:!1}));for(const c of n)h.push({id:`session_group_${c.id}`,contactId:`group_${c.id}`,unreadCount:0,updatedAt:gt(c.updatedAt||c.createdAt),isPinned:!1,isGroup:!0,groupName:c.name||"群聊",participantIds:tt(c.members).map(String),groupOwnerId:String(c.groupRoles?.owner||"self"),groupAdminIds:tt(c.groupRoles?.admins).map(String),groupMutes:Ae(c.mutedMembers)});const f=tt(t.messages).map((c,k)=>{const b=String(c.characterId||""),d=o.has(b)||!s.has(b),g=c.sender==="me"?"user":c.sender==="system"?"system":"assistant",_=gt(c.timestamp||c.time),m={id:String(c.id||c._id||ht("msg",k)),sessionId:d?`session_group_${b}`:`session_${b}`,role:g,content:String(c.text||""),status:"sent",createdAt:_,order:k};d&&g==="assistant"&&(m.senderCharacterId=String(c.senderCharacterId||c.characterId||"")),c.replyTo&&(m.mediaType="quote",m.mediaData={quoteMessageId:String(c.replyTo.id||c.replyTo.messageId||""),quotePreview:String(c.replyTo.text||c.replyTo.content||"")});const p=Ie(c.imageRef||c.mediaRef,e);return p&&(m.mediaType="image",m.mediaUrl=p),m});for(const c of h){const k=f.filter(d=>d.sessionId===c.id),b=k[k.length-1];b&&(c.updatedAt=b.createdAt,c.lastMessageId=b.id,c.lastMessagePreview=b.content.slice(0,80))}return{contacts:a,sessions:h,messages:f}}function ti(t,r,e){const s=tt(t.forumData).find(o=>String(o.key).startsWith("posts_")),n=tt(s?.value).map((o,a)=>{const h=Ae(o.author),f=String(o.id||ht("forum",a)),k=tt(o.interactions).filter(d=>d?.content).map((d,g)=>({id:ht("xhs_comment",`${f}_${g}`),noteId:f,authorType:d.isUserPost?"user":d.rosterId?"character":"npc",authorId:String(d.rosterId||(d.isUserPost?"user":ht("npc",d.author||g))),authorName:String(d.isAnon?"匿名用户":d.author||"论坛用户"),text:String(d.content),replyTo:d.replyTo?String(d.replyTo):void 0,likeCount:0,dislikeCount:0,liked:!1,disliked:!1,createdAt:gt(d.timestamp||o.timestamp)})),b=Ie(tt(o.images)[0]||o.image,e);return{id:f,type:"post",feedScope:"discover",source:h.rosterId?"character":"npc",authorId:String(h.rosterId||ht("npc",h.name||a)),authorName:String(o.isAnon?"匿名用户":h.name||"论坛用户"),title:String(o.title||"论坛迁移帖").slice(0,80),body:String(o.content||"").slice(0,3e3),coverIcon:"✎",tone:"ivory",tags:[o.boardName||"论坛迁移"].filter(Boolean).slice(0,6),likeCount:Number(o.likes||0),saveCount:0,commentCount:k.length,liked:!1,saved:!1,recentLikeNames:[],recentSaveNames:[],comments:k,imageDescription:b?"原帖包含图片（已随源备份保留）":void 0,createdAt:gt(o.timestamp),updatedAt:gt(o.timestamp)}});return{profile:{nickname:r?.name||"我",handle:r?.uid||"migrated",ipLocation:r?.ip||"未知",signature:r?.signature||"",gender:r?.gender||"",followingCount:Number(r?.following||0),followerCount:Number(r?.followers||0),likedAndSavedCount:0},settings:{bilingualTranslationEnabled:!1,collapseBilingualTranslation:!0,bilingualTranslationPrompt:"",npcIdentityGuardPrompt:"",npcFeedPrompt:"",npcUserPostReactionPrompt:"",npcCommentReplyPrompt:"",npcMoreCommentsPrompt:"",npcDmReplyPrompt:"",participantCharacterIds:[],sendToCharacterProbability:.5},notes:n,feedHiddenNoteIds:[],notifications:[],userInteractions:{likedNoteIds:[],savedNoteIds:[],commentedNoteIds:[]},socialGraph:{accounts:[],followingAccountIds:[],followerAccountIds:[]},updatedAt:new Date().toISOString()}}function to(t,r){const e=[];return{posts:tt(t.userPosts).map((i,n)=>{const o=String(i.id||i._id||ht("moment",n));tt(i.comments).forEach((h,f)=>e.push({id:String(h.id||ht("moment_comment",`${o}_${f}`)),postId:o,authorType:String(h.userId)===String(i.userId)?"user":"character",authorId:String(h.userId||"user"),authorName:h.name||void 0,content:String(h.content||""),replyToCommentId:h.replyTo?String(h.replyTo):void 0,createdAt:gt(h.timestamp||i.timestamp)}));const a=Ie(tt(i.imageRefs)[0]||tt(i.images)[0],r);return{id:o,authorType:i.isCharacterPost?"character":"user",authorId:String(i.charUserId||(i.isCharacterPost?i.userId:"user")),content:String(i.note||""),photoUrl:a||void 0,photoDescription:i.imagePrompt||void 0,visibility:tt(i.allowedUsers).map(String),location:i.location||void 0,likes:tt(i.likes).map(h=>({authorType:String(h.userId)===String(i.userId)?"user":"character",authorId:String(h.userId||"user"),authorName:h.name||void 0,createdAt:gt(h.timestamp||i.timestamp)})),createdAt:gt(i.timestamp)}}),comments:e}}function eo(t,r,e,s){const i=tt(t.tmSessions),n=tt(t.tmStories),o=[],a=[],h=[],f=new Map;for(const c of i){const k=c.id??c._id,b=n.filter(_=>String(_.sessionId)===String(k)).sort((_,m)=>new Date(_.timestamp)-new Date(m.timestamp));if(!b.length)continue;const d=String(c.characterId||""),g=`session_${d}`;if(e==="story"||e==="both"){const _=ht("story_session",k);o.push({id:_,characterId:d,title:c.name||"迁移剧情",updatedAt:gt(c.lastActiveAt||c.createdAt),lastMessageId:b.at(-1)?.id?ht("story_msg",b.at(-1).id):void 0,lastMessagePreview:Ke(b.at(-1)?.content,s).slice(0,80)}),b.forEach((m,p)=>a.push({id:ht("story_msg",m.id||m._id||`${k}_${p}`),sessionId:_,role:m.role==="user"?"user":m.role==="system"?"system":"assistant",rawContent:Ke(m.content,s),createdAt:gt(m.timestamp)}))}if(e==="offline"||e==="both"){const _=[{id:ht("offline_scene",k),sessionId:g,userContent:"",assistantContent:`──── 剧情分隔 ────
 【${String(c.name||"未命名剧情")}】`,summary:"",summaryTag:"summary",createdAt:gt(c.createdAt||b[0]?.timestamp)}];let m=null;for(const v of b){const x=Ke(v.content,s);x&&(v.role==="user"?(m&&_.push(m),m={id:ht("offline",v.id),sessionId:g,userContent:x,assistantContent:"",summary:"",summaryTag:"summary",createdAt:gt(v.timestamp)}):(m||(m={id:ht("offline",v.id),sessionId:g,userContent:"",assistantContent:"",summary:"",summaryTag:"summary",createdAt:gt(v.timestamp)}),m.assistantContent+=(m.assistantContent?`
 
-`:"")+x,_.push(m),m=null))}m&&_.push(m);const p=f.get(g)||[];p.push(..._),f.set(g,p)}}for(const[c,k]of f)k.sort((b,d)=>b.createdAt.localeCompare(d.createdAt)),h.push([`ai_phone_chat_offline_turns:${c}`,k],[`chat-offline-mode:${c}`,"1"]);return{storySessions:o,storyMessages:a,offlineKv:h}}function no(t){const r=[];return tt(t.memory).forEach((e,s)=>{e.episodeSummary&&r.push({id:ht("memory",`episode_${s}`),characterId:String(e.characterId),sourceApp:"chat",type:"long_term",content:String(e.episodeSummary),importance:.7,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()}),tt(e.userFacts).forEach((i,n)=>r.push({id:ht("memory",`fact_${s}_${n}`),characterId:String(e.characterId),sourceApp:"chat",type:"core",content:typeof i=="string"?i:JSON.stringify(i),importance:.9,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()}))}),tt(t.summaryEntries).forEach((e,s)=>r.push({id:ht("memory",e.id||`summary_${s}`),characterId:String(e.characterId||""),sourceApp:e.source==="forum"?"xiaohongshu":"story",type:"long_term",content:String(e.summary||e.content||""),importance:Math.max(0,Math.min(1,Number(e.importance??.6))),createdAt:gt(e.date),updatedAt:gt(e.date),metadata:{source:e.source,topics:e.topics,emotion:e.emotion}})),r.filter(e=>e.content)}async function ro(t,r){It(8,"正在解压糯叽机备份…");const e=qr.ungzip(new Uint8Array(t),{to:"string"});It(18,"正在校验和解析数据…");const s=JSON.parse(e);if(!s?.data?.structuredDB)throw new Error("不是受支持的糯叽机备份");const i=s.data.structuredDB,n=Ys(i),o=tt(i.users)[0],a=Xs(o,n),h=qs(i,r.keyMode),f=Js(i,n),c=Vs(i);It(30,"正在转换角色、私聊与基础群聊…");const k=Qs(i,f,n);It(46,"正在转换剧情聊天…");const b=eo(i,k,r.storyMode,r.stripStatus),d=no(i),g=[];g.push(se("characters",[We([["ai_phone_characters_v1",f]])])),g.push(se("settings",[Ee("AiPhoneSettingsDB",[zt("presets","id",[],[]),zt("worldBooks","id",[],c),zt("regexes","id",[],[])]),We([["ai_phone_api_configs_v1",[h.config]],["ai_phone_migration_api_meta_v1",h.meta],["ai_phone_user_identities_v1",a]]),{type:"localStorage",records:[{key:"ai_phone_settings_idb_migrated_v1",value:"1"}]}])),g.push(se("chat",[Ee("AiPhoneChatDB",[zt("messages","id",[{name:"sessionId",keyPath:"sessionId",unique:!1,multiEntry:!1},{name:"createdAt",keyPath:"createdAt",unique:!1,multiEntry:!1}],k.messages),zt("sessions","id",[{name:"contactId",keyPath:"contactId",unique:!1,multiEntry:!1}],k.sessions),zt("contacts","id",[{name:"characterId",keyPath:"characterId",unique:!1,multiEntry:!1}],k.contacts)]),We(b.offlineKv),{type:"localStorage",records:[{key:"ai_phone_idb_migrated_v1",value:"1"}]}]));const _=to(i,n);It(58,r.includeForum?"正在将论坛转换为小红书…":"正在转换朋友圈…");const m=[Ee("AiPhoneMomentsDB",[zt("posts","id",[{name:"authorId",keyPath:"authorId",unique:!1,multiEntry:!1},{name:"createdAt",keyPath:"createdAt",unique:!1,multiEntry:!1}],_.posts),zt("comments","id",[{name:"postId",keyPath:"postId",unique:!1,multiEntry:!1},{name:"createdAt",keyPath:"createdAt",unique:!1,multiEntry:!1}],_.comments)])];r.includeForum&&m.push(We([["ai_phone_xiaohongshu_state_v1",ti(i,o,n)]])),g.push(se("social",m)),d.length&&g.push(se("memory",[Ee("ai_phone_memory_db_v1",[zt("memories","id",[{name:"by_character",keyPath:"characterId",unique:!1,multiEntry:!1},{name:"by_character_type",keyPath:["characterId","type"],unique:!1,multiEntry:!1},{name:"by_character_created",keyPath:["characterId","createdAt"],unique:!1,multiEntry:!1}],d)])])),b.storySessions.length&&g.push(se("creative",[Ee("AiPhoneStoryDB",[zt("sessions","id",[{name:"characterId",keyPath:"characterId",unique:!1,multiEntry:!1},{name:"updatedAt",keyPath:"updatedAt",unique:!1,multiEntry:!1}],b.storySessions),zt("messages","id",[{name:"sessionId",keyPath:"sessionId",unique:!1,multiEntry:!1},{name:"createdAt",keyPath:"createdAt",unique:!1,multiEntry:!1}],b.storyMessages)])])),It(70,"正在生成 Float 备份结构…");const p=new Vr,v=[];g.forEach((I,B)=>{const R=JSON.stringify(I);p.file(`modules/${I.moduleId}/${String(B).padStart(3,"0")}.json`,R),v.push({id:I.moduleId,label:I.moduleId,records:I.sources.reduce((U,T)=>U+(T.type==="indexeddb"?T.stores.reduce((F,j)=>F+j.records.length,0):T.records.length),0),bytes:new Blob([R]).size})});const x={format:"ai-phone-backup",version:1,createdAt:new Date().toISOString(),origin:"ai-phone-converter",modules:v,totalBytes:v.reduce((I,B)=>I+B.bytes,0),totalRecords:v.reduce((I,B)=>I+B.records,0)};return p.file("manifest.json",JSON.stringify(x,null,2)),It(82,"正在压缩 Float 备份，请勿关闭页面…"),{out:await p.generateAsync({type:"arraybuffer",compression:"DEFLATE",compressionOptions:{level:6}},I=>It(82+Math.floor(I.percent*.15),`正在压缩：${I.percent.toFixed(0)}%`)),report:["转换完成，已生成 Float 原生备份。",`角色：${f.length}`,`聊天消息：${k.messages.length}`,`基础群聊：${tt(tt(i.groupChats)[0]?.groups).length}`,`世界书：${c.length}`,`朋友圈：${_.posts.length}`,`论坛帖子→小红书：${r.includeForum?ti(i,o,n).notes.length:0}`,`剧情App消息：${b.storyMessages.length}`,`线下剧情会话：${b.offlineKv.length/2}`,`记忆：${d.length}`,`API预设：1（${r.keyMode==="blank"?"Key已留空":"含Key"}）`,"未导入：多人场景、家园、情侣空间、异世界、自定义游戏、Minimax、图片/语音API。"]}}function Ut(t,r,e,s){const i=[];for(const n of t)for(const o of tt(n.sources))if(r==="kv"&&o.type==="kv"&&i.push(...tt(o.records)),r==="indexeddb"&&o.type==="indexeddb"&&(!e||o.dbName===e))for(const a of tt(o.stores))(!s||a.name===s)&&i.push(...tt(a.records).map(h=>h.value));return i}const io=t=>Object.fromEntries(t.map(r=>{try{return[r.key,typeof r.value=="string"?JSON.parse(r.value):r.value]}catch{return[r.key,r.value]}}));async function ao(t,r){It(8,"正在读取 Float 备份目录（只匹配需要的模块）…");const e=await Vr.loadAsync(t),s=Object.keys(e.files).filter(E=>/^modules\/.+\.json$/.test(E));if(!e.file("manifest.json")||!s.length)throw new Error("不是受支持的 Float ZIP 备份");const i=[];for(let E=0;E<s.length;E++){const C=e.file(s[E]);C&&i.push(JSON.parse(await C.async("string"))),It(10+Math.floor((E+1)/s.length*25),`正在匹配核心模块 ${E+1}/${s.length}…`)}const n=io(Ut(i,"kv")),o=tt(n.ai_phone_characters_v1),a=tt(n.ai_phone_user_identities_v1),h=tt(n.ai_phone_api_configs_v1)[0]||{},f=Ae(n.ai_phone_migration_api_meta_v1),c=Ut(i,"indexeddb","AiPhoneChatDB","messages"),k=Ut(i,"indexeddb","AiPhoneChatDB","sessions"),b=Ut(i,"indexeddb","AiPhoneChatDB","contacts"),d=Ut(i,"indexeddb","AiPhoneStoryDB","sessions"),g=Ut(i,"indexeddb","AiPhoneStoryDB","messages"),_=Ut(i,"indexeddb","AiPhoneSettingsDB","worldBooks"),m=Ut(i,"indexeddb","AiPhoneMomentsDB","posts"),p=Ut(i,"indexeddb","AiPhoneMomentsDB","comments"),v=E=>{const C=typeof E=="number"?E:new Date(E||Date.now()).getTime();return Number.isFinite(C)?C:Date.now()},x=new Map,S=E=>{let C="";for(let y=0;y<E.length;y+=32768)C+=String.fromCharCode(...E.subarray(y,y+32768));return btoa(C)};for(const E of o){const C=E?.avatar;if(C?.__aiPhoneMediaRef&&C.ref&&!x.has(C.ref)){const y=e.file(`media/${C.ref}.bin`);if(y){const w=await y.async("uint8array");x.set(C.ref,`data:${C.mimeType||"image/png"};base64,${S(w)}`)}}}const I=[],B=new Map,R=E=>{let C=E;if(E?.__aiPhoneMediaRef&&(C=x.get(E.ref)),!C||typeof C!="string")return;if(B.has(C))return B.get(C);const y=I.length+1;return B.set(C,y),I.push({id:y,data:C,createdAt:Date.now()}),y},U=a[0]||{},T=`uid_${Date.now()}_migrated`,F=String(U.id||"migrated_user"),j=o.map((E,C)=>({id:String(E.id||ht("char",C)),name:String(E.name||`角色${C+1}`),aliases:tt(E.tags).join(", "),gender:String(E.gender||""),role:String(E.role||""),group:"Default",birthday:String(E.birthday||""),description:String(E.persona||E.description||""),worldBook:[],type:"main",boundTo:[],momentFrequency:40,imagePrompt:"",idAlias:E.wechatID||"",balance:1e3,nationality:String(E.nationality||""),imageRef:R(E.avatar),_rev:Date.now()})),A=[{hobbies:[],posts:[],uid:T,id:F,name:String(U.name||"我"),signature:"",birthday:"",gender:String(U.gender||""),ip:"Unknown",virtualIp:"",intro:String(U.bio||U.customSettings||""),followers:0,following:0,balance:0,avatarRef:R(U.avatarUrl),_rev:Date.now()}],P=new Set(j.map(E=>E.id)),u=new Map(b.map(E=>[String(E.id),E])),Z=new Map(k.map(E=>[String(E.id),E])),Q=E=>{const C=String(E?.contactId||E?.characterId||"");if(P.has(C))return C;const y=u.get(C);return y&&P.has(String(y.characterId))?String(y.characterId):""};let $=1;const et=c.filter(E=>{const C=Z.get(String(E.sessionId));return C&&!C.isGroup&&Q(C)}).sort((E,C)=>v(E.createdAt)-v(C.createdAt)).map(E=>{const C=Z.get(String(E.sessionId)),y={id:Date.now()+$,characterId:Q(C),userId:T,sender:E.role==="user"?"me":E.role==="system"?"system":"character",text:String(E.content||E.rawContent||""),timestamp:v(E.createdAt),time:new Date(v(E.createdAt)).toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit"}),_id:$++},w=R(E.mediaUrl);return w&&(y.imageRef=w),y}),H=[],V=[];let N=1,O=1;const q=(E,C,y)=>{const w=y.map(L=>({...L,content:Ke(L.rawContent??L.content,r.stripStatus)})).filter(L=>L.content);if(!w.length)return;const z=N++;H.push({userId:T,characterId:String(E),name:C,type:"this-moment",createdAt:v(w[0].createdAt),lastActiveAt:v(w.at(-1).createdAt),_id:z,completed:!0,completedAt:v(w.at(-1).createdAt)}),w.forEach(L=>V.push({role:L.role==="user"?"user":L.role==="system"?"system":"char",content:L.content,sessionId:z,userId:T,characterId:String(E),timestamp:v(L.createdAt),_id:O++}))};if(r.storyMode==="story"||r.storyMode==="both")for(const E of d){const C=g.filter(y=>String(y.sessionId)===String(E.id)).sort((y,w)=>v(y.createdAt)-v(w.createdAt));q(E.characterId,d.filter(y=>String(y.characterId)===String(E.characterId)).length>1?`剧情 · ${E.title||"未命名"}`:"剧情",C)}if(r.storyMode==="offline"||r.storyMode==="both")for(const E of j){const C=tt(n[`ai_phone_chat_offline_turns:session_${E.id}`]),y=[];for(const w of C)w.userContent&&y.push({role:"user",content:w.userContent,createdAt:w.createdAt}),w.assistantContent&&y.push({role:"assistant",content:w.assistantContent,createdAt:w.createdAt});q(E.id,"线下",y)}const Y=[],K={mainApiUrl:h.baseUrl||"",mainApiKey:r.keyMode==="blank"?"":h.apiKey||"",mainApiModel:h.defaultModel||"",apiType:h.provider||f.sourceApiType||"Custom",temperature:Number(h.temperature??f.temperature??1),streamingMode:h.streamingMode??f.streamingMode??!0},dt=[{key:"apiSettings",value:K},{key:"apiPresets",value:[{name:h.name||"Float 迁移预设",mainApi:{apiUrl:K.mainApiUrl,apiKey:K.mainApiKey,model:K.mainApiModel,temperature:K.temperature}}]}],_t=_.map((E,C)=>({id:Number.isFinite(Number(E.id))?Number(E.id):Date.now()+C,title:String(E.name||E.title||`世界书${C+1}`),author:"Float 迁移",description:String(E.description||""),entries:tt(E.entries).map((y,w)=>({name:String(y.comment||y.name||`条目${w+1}`),keys:String(y.key||tt(y.keys).join(", ")||""),content:String(y.content||""),constant:y.constant===!0,priority:"medium",type:y.use_regex?"regex":"normal",uid:String(y.uid||ht("wb",`${C}_${w}`))}))}));let nt=1;const at=m.sort((E,C)=>v(E.createdAt)-v(C.createdAt)).map(E=>{const C=String(E.id),y=E.authorType==="character",w=j.find(z=>z.id===String(E.authorId));return{userId:T,id:Number.isFinite(Number(E.id))?Number(E.id):Date.now()+nt,name:y?w?.name||"角色":U.name||"我",images:E.photoDescription?[`txt:${E.photoDescription}`]:[],imagePrompt:String(E.photoDescription||""),note:String(E.content||""),timestamp:v(E.createdAt),likes:tt(E.likes).map(z=>({userId:z.authorId||F,name:z.authorName||"",timestamp:v(z.createdAt)})),comments:p.filter(z=>String(z.postId)===C).map(z=>({id:Number.isFinite(Number(z.id))?Number(z.id):Date.now()+nt++,userId:String(z.authorId||F),name:String(z.authorName||""),content:String(z.content||""),timestamp:v(z.createdAt)})),location:String(E.location||""),mentions:[],visibility:"Public",allowedUsers:[],allowedGroups:[],isCharacterPost:y,charUserId:y?String(E.authorId):void 0,imageRefs:[],_id:nt++}}),ut=["stickers","kaomojis","favorites","callLogs","roleStickers","multiSceneSessions","multiSceneStories","multiSceneCastSettings","multiSceneSessionSettings","multiSceneSessionSummaries","customNoises","customBgm","flashMoments","groupSettings","userLinks","userMessages","ttsAudio","calendarData","groupChats","xinsheng","pomodoroSessions","couplesData","stickerStore","quickReplies","goingOutState","goingOutAreas","mapRasterCache","customGames","customWidgetTemplates","customWidgetState","wallpapers","whiteDogData","isekaiSaves","isekaiPresets","pomodoroData","regexRules","mcpServers","thinkingStore","commitments","characterLifeState","chikanPhoneSkins","healthEntries","healthProfile","homelandState","fontStore","radioData","novelBooks","novelChapters","coReadBooks","coReadChapters","coReadSessions","naiVibeCache"],lt={characters:j,worldBooks:_t,globalSettings:dt,users:A,userState:[],userPosts:at,chatSettings:j.map(E=>({userId:T,characterId:E.id})),messages:et,memory:[],tmSessions:H,tmStories:V,forumData:Y,imageStore:I};for(const E of ut)lt[E]=[];It(72,"正在生成糯叽机备份…");const At={version:5,timestamp:Date.now(),userAgent:"Float backup converter",appVersion:"converter-v6",data:{indexedDB:{},localStorage:{tm_last_userId:T},structuredDB:lt},metadata:{source:"float",safeWorldBook:!0}},bt=qr.gzip(JSON.stringify(At),{level:6}),l=["转换完成，已生成糯叽机备份。",`角色：${j.length}`,`私聊消息：${et.length}`,`剧情分页：${H.filter(E=>String(E.name).startsWith("剧情")).length}`,`线下分页：${H.filter(E=>E.name==="线下").length}`,`世界书：${_t.length}`,`朋友圈：${lt.userPosts.length}`,`API预设：${h.baseUrl||h.defaultModel?1:0}`,"角色记忆：未转换（建议手动总结）","Float 小红书/论坛：未转换","剧情与线下按角色独立分页，未进行混合。","已排除：群聊、Float 专属应用、主题、桌面、工具、游戏、音频及缓存数据。"];return{out:bt.buffer.slice(bt.byteOffset,bt.byteOffset+bt.byteLength),report:l}}typeof self<"u"&&(self.onmessage=async({data:t})=>{try{const r=t.direction==="toNuojiji",{out:e,report:s}=r?await ao(t.buffer,t.options):await ro(t.buffer,t.options),i=r?`nuojiji-backup-converted-${new Date().toISOString().slice(0,10)}.gz`:`float-backup-converted-${new Date().toISOString().slice(0,10)}.zip`;postMessage({type:"done",buffer:e,report:s,filename:i},[e])}catch(r){postMessage({type:"error",message:r instanceof Error?r.message:String(r)})}})})();
+`:"")+x,_.push(m),m=null))}m&&_.push(m);const p=f.get(g)||[];p.push(..._),f.set(g,p)}}for(const[c,k]of f)k.sort((b,d)=>b.createdAt.localeCompare(d.createdAt)),h.push([`ai_phone_chat_offline_turns:${c}`,k],[`chat-offline-mode:${c}`,"1"]);return{storySessions:o,storyMessages:a,offlineKv:h}}function no(t){const r=[];return tt(t.memory).forEach((e,s)=>{e.episodeSummary&&r.push({id:ht("memory",`episode_${s}`),characterId:String(e.characterId),sourceApp:"chat",type:"long_term",content:String(e.episodeSummary),importance:.7,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()}),tt(e.userFacts).forEach((i,n)=>r.push({id:ht("memory",`fact_${s}_${n}`),characterId:String(e.characterId),sourceApp:"chat",type:"core",content:typeof i=="string"?i:JSON.stringify(i),importance:.9,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()}))}),tt(t.summaryEntries).forEach((e,s)=>r.push({id:ht("memory",e.id||`summary_${s}`),characterId:String(e.characterId||""),sourceApp:e.source==="forum"?"xiaohongshu":"story",type:"long_term",content:String(e.summary||e.content||""),importance:Math.max(0,Math.min(1,Number(e.importance??.6))),createdAt:gt(e.date),updatedAt:gt(e.date),metadata:{source:e.source,topics:e.topics,emotion:e.emotion}})),r.filter(e=>e.content)}async function ro(t,r){It(8,"正在解压糯叽机备份…");const e=qr.ungzip(new Uint8Array(t),{to:"string"});It(18,"正在校验和解析数据…");const s=JSON.parse(e);if(!s?.data?.structuredDB)throw new Error("不是受支持的糯叽机备份");const i=s.data.structuredDB,n=Ys(i),o=tt(i.users)[0],a=Xs(o,n),h=qs(i,r.keyMode),f=Js(i,n),c=Vs(i);It(30,"正在转换角色、私聊与基础群聊…");const k=Qs(i,f,n);It(46,"正在转换剧情聊天…");const b=eo(i,k,r.storyMode,r.stripStatus),d=no(i),g=[];g.push(se("characters",[We([["ai_phone_characters_v1",f]])])),g.push(se("settings",[Ee("AiPhoneSettingsDB",[zt("presets","id",[],[]),zt("worldBooks","id",[],c),zt("regexes","id",[],[])]),We([["ai_phone_api_configs_v1",[h.config]],["ai_phone_migration_api_meta_v1",h.meta],["ai_phone_user_identities_v1",a]]),{type:"localStorage",records:[{key:"ai_phone_settings_idb_migrated_v1",value:"1"}]}])),g.push(se("chat",[Ee("AiPhoneChatDB",[zt("messages","id",[{name:"sessionId",keyPath:"sessionId",unique:!1,multiEntry:!1},{name:"createdAt",keyPath:"createdAt",unique:!1,multiEntry:!1}],k.messages),zt("sessions","id",[{name:"contactId",keyPath:"contactId",unique:!1,multiEntry:!1}],k.sessions),zt("contacts","id",[{name:"characterId",keyPath:"characterId",unique:!1,multiEntry:!1}],k.contacts)]),We(b.offlineKv),{type:"localStorage",records:[{key:"ai_phone_idb_migrated_v1",value:"1"}]}]));const _=to(i,n);It(58,r.includeForum?"正在将论坛转换为小红书…":"正在转换朋友圈…");const m=[Ee("AiPhoneMomentsDB",[zt("posts","id",[{name:"authorId",keyPath:"authorId",unique:!1,multiEntry:!1},{name:"createdAt",keyPath:"createdAt",unique:!1,multiEntry:!1}],_.posts),zt("comments","id",[{name:"postId",keyPath:"postId",unique:!1,multiEntry:!1},{name:"createdAt",keyPath:"createdAt",unique:!1,multiEntry:!1}],_.comments)])];r.includeForum&&m.push(We([["ai_phone_xiaohongshu_state_v1",ti(i,o,n)]])),g.push(se("social",m)),d.length&&g.push(se("memory",[Ee("ai_phone_memory_db_v1",[zt("memories","id",[{name:"by_character",keyPath:"characterId",unique:!1,multiEntry:!1},{name:"by_character_type",keyPath:["characterId","type"],unique:!1,multiEntry:!1},{name:"by_character_created",keyPath:["characterId","createdAt"],unique:!1,multiEntry:!1}],d)])])),b.storySessions.length&&g.push(se("creative",[Ee("AiPhoneStoryDB",[zt("sessions","id",[{name:"characterId",keyPath:"characterId",unique:!1,multiEntry:!1},{name:"updatedAt",keyPath:"updatedAt",unique:!1,multiEntry:!1}],b.storySessions),zt("messages","id",[{name:"sessionId",keyPath:"sessionId",unique:!1,multiEntry:!1},{name:"createdAt",keyPath:"createdAt",unique:!1,multiEntry:!1}],b.storyMessages)])])),It(70,"正在生成 Float 备份结构…");const p=new Vr,v=[];g.forEach((I,B)=>{const R=JSON.stringify(I);p.file(`modules/${I.moduleId}/${String(B).padStart(3,"0")}.json`,R),v.push({id:I.moduleId,label:I.moduleId,records:I.sources.reduce((U,T)=>U+(T.type==="indexeddb"?T.stores.reduce((F,j)=>F+j.records.length,0):T.records.length),0),bytes:new Blob([R]).size})});const x={format:"ai-phone-backup",version:1,createdAt:new Date().toISOString(),origin:"ai-phone-converter",modules:v,totalBytes:v.reduce((I,B)=>I+B.bytes,0),totalRecords:v.reduce((I,B)=>I+B.records,0)};return p.file("manifest.json",JSON.stringify(x,null,2)),It(82,"正在压缩 Float 备份，请勿关闭页面…"),{out:await p.generateAsync({type:"arraybuffer",compression:"DEFLATE",compressionOptions:{level:6}},I=>It(82+Math.floor(I.percent*.15),`正在压缩：${I.percent.toFixed(0)}%`)),report:["转换完成，已生成 Float 原生备份。",`角色：${f.length}`,`聊天消息：${k.messages.length}`,`基础群聊：${tt(tt(i.groupChats)[0]?.groups).length}`,`世界书：${c.length}`,`朋友圈：${_.posts.length}`,`论坛帖子→小红书：${r.includeForum?ti(i,o,n).notes.length:0}`,`剧情App消息：${b.storyMessages.length}`,`线下剧情会话：${b.offlineKv.length/2}`,`记忆：${d.length}`,`API预设：1（${r.keyMode==="blank"?"Key已留空":"含Key"}）`,"未导入：多人场景、家园、情侣空间、异世界、自定义游戏、Minimax、图片/语音API。"]}}function Ut(t,r,e,s){const i=[];for(const n of t)for(const o of tt(n.sources))if(r==="kv"&&o.type==="kv"&&i.push(...tt(o.records)),r==="indexeddb"&&o.type==="indexeddb"&&(!e||o.dbName===e))for(const a of tt(o.stores))(!s||a.name===s)&&i.push(...tt(a.records).map(h=>h.value));return i}const io=t=>Object.fromEntries(t.map(r=>{try{return[r.key,typeof r.value=="string"?JSON.parse(r.value):r.value]}catch{return[r.key,r.value]}}));async function ao(t,r){It(8,"正在读取 Float 备份目录（只匹配需要的模块）…");const e=await Vr.loadAsync(t),s=Object.keys(e.files).filter(E=>/^modules\/.+\.json$/.test(E));if(!e.file("manifest.json")||!s.length)throw new Error("不是受支持的 Float ZIP 备份");const i=[];for(let E=0;E<s.length;E++){const C=e.file(s[E]);C&&i.push(JSON.parse(await C.async("string"))),It(10+Math.floor((E+1)/s.length*25),`正在匹配核心模块 ${E+1}/${s.length}…`)}const n=io(Ut(i,"kv")),o=tt(n.ai_phone_characters_v1),a=tt(n.ai_phone_user_identities_v1),h=tt(n.ai_phone_api_configs_v1)[0]||{},f=Ae(n.ai_phone_migration_api_meta_v1),c=Ut(i,"indexeddb","AiPhoneChatDB","messages"),k=Ut(i,"indexeddb","AiPhoneChatDB","sessions"),b=Ut(i,"indexeddb","AiPhoneChatDB","contacts"),d=Ut(i,"indexeddb","AiPhoneStoryDB","sessions"),g=Ut(i,"indexeddb","AiPhoneStoryDB","messages"),_=Ut(i,"indexeddb","AiPhoneSettingsDB","worldBooks"),m=Ut(i,"indexeddb","AiPhoneMomentsDB","posts"),p=Ut(i,"indexeddb","AiPhoneMomentsDB","comments"),v=E=>{const C=typeof E=="number"?E:new Date(E||Date.now()).getTime();return Number.isFinite(C)?C:Date.now()},x=new Map,S=E=>{let C="";for(let y=0;y<E.length;y+=32768)C+=String.fromCharCode(...E.subarray(y,y+32768));return btoa(C)};for(const E of o){const C=E?.avatar;if(C?.__aiPhoneMediaRef&&C.ref&&!x.has(C.ref)){const y=e.file(`media/${C.ref}.bin`);if(y){const w=await y.async("uint8array");x.set(C.ref,`data:${C.mimeType||"image/png"};base64,${S(w)}`)}}}const I=[],B=new Map,R=E=>{let C=E;if(E?.__aiPhoneMediaRef&&(C=x.get(E.ref)),!C||typeof C!="string")return;if(B.has(C))return B.get(C);const y=I.length+1;return B.set(C,y),I.push({id:y,data:C,createdAt:Date.now()}),y},U=a[0]||{},T=`uid_${Date.now()}_migrated`,F=String(U.id||"migrated_user"),j=o.map((E,C)=>({id:String(E.id||ht("char",C)),name:String(E.name||`角色${C+1}`),aliases:tt(E.tags).join(", "),gender:String(E.gender||""),role:String(E.role||""),group:"Default",birthday:String(E.birthday||""),description:String(E.persona||E.description||""),worldBook:[],type:"main",boundTo:[],momentFrequency:40,imagePrompt:"",idAlias:E.wechatID||"",balance:1e3,nationality:String(E.nationality||""),imageRef:R(E.avatar),_rev:Date.now()})),A=[{hobbies:[],posts:[],uid:T,id:F,name:String(U.name||"我"),signature:"",birthday:"",gender:String(U.gender||""),ip:"Unknown",virtualIp:"",intro:String(U.bio||U.customSettings||""),followers:0,following:0,balance:0,avatarRef:R(U.avatarUrl),_rev:Date.now()}],P=new Set(j.map(E=>E.id)),u=new Map(b.map(E=>[String(E.id),E])),Z=new Map(k.map(E=>[String(E.id),E])),Q=E=>{const C=String(E?.contactId||E?.characterId||"");if(P.has(C))return C;const y=u.get(C);return y&&P.has(String(y.characterId))?String(y.characterId):""};let $=1;const et=c.filter(E=>{const C=Z.get(String(E.sessionId));return C&&!C.isGroup&&Q(C)}).sort((E,C)=>v(E.createdAt)-v(C.createdAt)).map(E=>{const C=Z.get(String(E.sessionId)),y={id:Date.now()+$,characterId:Q(C),userId:T,sender:E.role==="user"?"me":E.role==="system"?"system":"character",text:String(E.content||E.rawContent||""),timestamp:v(E.createdAt),time:new Date(v(E.createdAt)).toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit"}),_id:$++},w=R(E.mediaUrl);return w&&(y.imageRef=w),y}),H=[],V=[];let N=1,O=1;const q=(E,C,y)=>{const w=y.map(L=>({...L,content:Ke(L.rawContent??L.content,r.stripStatus)})).filter(L=>L.content);if(!w.length)return;const z=N++;H.push({userId:T,characterId:String(E),name:C,type:"this-moment",createdAt:v(w[0].createdAt),lastActiveAt:v(w.at(-1).createdAt),_id:z,completed:!0,completedAt:v(w.at(-1).createdAt)}),w.forEach(L=>V.push({role:L.role==="user"?"user":L.role==="system"?"system":"char",content:L.content,sessionId:z,userId:T,characterId:String(E),timestamp:v(L.createdAt),_id:O++}))};if(r.storyMode==="story"||r.storyMode==="both")for(const E of d){const C=g.filter(y=>String(y.sessionId)===String(E.id)).sort((y,w)=>v(y.createdAt)-v(w.createdAt));q(E.characterId,d.filter(y=>String(y.characterId)===String(E.characterId)).length>1?`剧情 · ${E.title||"未命名"}`:"剧情",C)}if(r.storyMode==="offline"||r.storyMode==="both")for(const E of j){const C=tt(n[`ai_phone_chat_offline_turns:session_${E.id}`]),y=[];for(const w of C)w.userContent&&y.push({role:"user",content:w.userContent,createdAt:w.createdAt}),w.assistantContent&&y.push({role:"assistant",content:w.assistantContent,createdAt:w.createdAt});q(E.id,"线下",y)}const Y=[],K={mainApiUrl:h.baseUrl||"",mainApiKey:r.keyMode==="blank"?"":h.apiKey||"",mainApiModel:h.defaultModel||"",apiType:h.provider||f.sourceApiType||"Custom",temperature:Number(h.temperature??f.temperature??1),streamingMode:h.streamingMode??f.streamingMode??!0},dt=[{key:"apiSettings",value:K},{key:"apiPresets",value:[{name:h.name||"Float 迁移预设",mainApi:{apiUrl:K.mainApiUrl,apiKey:K.mainApiKey,model:K.mainApiModel,temperature:K.temperature}}]}],_t=_.map((E,C)=>({id:Number.isFinite(Number(E.id))?Number(E.id):Date.now()+C,title:String(E.name||E.title||`世界书${C+1}`),author:"Float 迁移",description:String(E.description||""),entries:tt(E.entries).map((y,w)=>({name:String(y.comment||y.name||`条目${w+1}`),keys:String(y.key||tt(y.keys).join(", ")||""),content:String(y.content||""),constant:y.constant===!0,priority:"medium",type:y.use_regex?"regex":"normal",uid:String(y.uid||ht("wb",`${C}_${w}`))}))}));let nt=1;const at=m.sort((E,C)=>v(E.createdAt)-v(C.createdAt)).map(E=>{const C=String(E.id),y=E.authorType==="character",w=j.find(z=>z.id===String(E.authorId));return{userId:T,id:Number.isFinite(Number(E.id))?Number(E.id):Date.now()+nt,name:y?w?.name||"角色":U.name||"我",images:E.photoDescription?[`txt:${E.photoDescription}`]:[],imagePrompt:String(E.photoDescription||""),note:String(E.content||""),timestamp:v(E.createdAt),likes:tt(E.likes).map(z=>({userId:z.authorId||F,name:z.authorName||"",timestamp:v(z.createdAt)})),comments:p.filter(z=>String(z.postId)===C).map(z=>({id:Number.isFinite(Number(z.id))?Number(z.id):Date.now()+nt++,userId:String(z.authorId||F),name:String(z.authorName||""),content:String(z.content||""),timestamp:v(z.createdAt)})),location:String(E.location||""),mentions:[],visibility:"Public",allowedUsers:[],allowedGroups:[],isCharacterPost:y,charUserId:y?String(E.authorId):void 0,imageRefs:[],_id:nt++}}),ut=["stickers","kaomojis","favorites","callLogs","roleStickers","multiSceneSessions","multiSceneStories","multiSceneCastSettings","multiSceneSessionSettings","multiSceneSessionSummaries","customNoises","customBgm","flashMoments","groupSettings","userLinks","userMessages","ttsAudio","calendarData","groupChats","xinsheng","pomodoroSessions","couplesData","stickerStore","quickReplies","goingOutState","goingOutAreas","mapRasterCache","customGames","customWidgetTemplates","customWidgetState","wallpapers","whiteDogData","isekaiSaves","isekaiPresets","pomodoroData","regexRules","mcpServers","thinkingStore","commitments","characterLifeState","chikanPhoneSkins","healthEntries","healthProfile","homelandState","fontStore","radioData","novelBooks","novelChapters","coReadBooks","coReadChapters","coReadSessions","naiVibeCache"],lt={characters:j,worldBooks:_t,globalSettings:dt,users:A,userState:[],userPosts:at,chatSettings:j.map(E=>({userId:T,characterId:E.id})),messages:et,memory:[],tmSessions:H,tmStories:V,forumData:Y,imageStore:I};for(const E of ut)lt[E]=[];It(72,"正在生成糯叽机备份…");const At={version:5,timestamp:Date.now(),userAgent:"Float backup converter",appVersion:"converter-v6",data:{indexedDB:{},localStorage:{tm_last_userId:T},structuredDB:lt},metadata:{source:"float",safeWorldBook:!0}},bt=qr.gzip(JSON.stringify(At),{level:6}),l=["转换完成，已生成糯叽机备份。",`角色：${j.length}`,`私聊消息：${et.length}`,`剧情分页：${H.filter(E=>String(E.name).startsWith("剧情")).length}`,`线下分页：${H.filter(E=>E.name==="线下").length}`,`世界书：${_t.length}`,`朋友圈：${lt.userPosts.length}`,`API预设：${h.baseUrl||h.defaultModel?1:0}`,"角色记忆：未转换（建议手动总结）","Float 小红书/论坛：未转换","剧情与线下按角色独立分页，未进行混合。","已排除：群聊、Float 专属应用、主题、桌面、工具、游戏、音频及缓存数据。"];return{out:bt.buffer.slice(bt.byteOffset,bt.byteOffset+bt.byteLength),report:l}}
+const EPHONE_CONTROL_TYPES = new Set(["thought_chain_block", "summary"]);
+const EPHONE_IMAGE_TYPES = new Set(["ai_image", "naiimag", "googleimag", "user_photo"]);
+
+const ephoneArray = value => Array.isArray(value) ? value : [];
+const ephoneObject = value => value && typeof value === "object" && !Array.isArray(value) ? value : {};
+const ephoneText = value => typeof value === "string" ? value : value == null ? "" : String(value);
+
+function ephoneSafeId(prefix, value, index = 0) {
+  const clean = ephoneText(value || index).replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 110);
+  return `${prefix}_${clean || index}`;
+}
+
+function ephoneIso(value, fallback = Date.now()) {
+  let timestamp = typeof value === "number" ? value : new Date(value || fallback).getTime();
+  if (Number.isFinite(timestamp) && timestamp > 0 && timestamp < 1e12) timestamp *= 1000;
+  if (!Number.isFinite(timestamp) || timestamp <= 0) timestamp = fallback;
+  return new Date(timestamp).toISOString();
+}
+
+function ephoneTime(value, fallback = Date.now()) {
+  return new Date(ephoneIso(value, fallback)).getTime();
+}
+
+function ephoneFirst(...values) {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) return value.trim();
+    if (value !== undefined && value !== null && typeof value !== "string") return value;
+  }
+  return "";
+}
+
+function ephoneNameKey(value) {
+  return ephoneText(value).trim().replace(/\s+/g, "").toLocaleLowerCase();
+}
+
+function ephoneJsonText(value) {
+  if (typeof value === "string") return value;
+  if (value === undefined || value === null) return "";
+  try { return JSON.stringify(value); } catch { return String(value); }
+}
+
+function ephoneMessagePayload(message, stripStatus) {
+  const type = ephoneText(message.type).toLowerCase();
+  if (stripStatus && (EPHONE_CONTROL_TYPES.has(type) || message.isHidden === true)) return null;
+
+  const rawContent = message.content;
+  let content = typeof rawContent === "string" ? rawContent : ephoneJsonText(rawContent);
+  const imageCandidate = ephoneFirst(message.imageUrl, EPHONE_IMAGE_TYPES.has(type) ? rawContent : "");
+  const data = {};
+
+  if (EPHONE_IMAGE_TYPES.has(type) && typeof imageCandidate === "string") {
+    data.mediaType = "image";
+    data.mediaUrl = imageCandidate;
+    data.mediaData = { label: ephoneText(ephoneFirst(message.description, message.meaning, message.prompt, "图片")) };
+    content = ephoneText(ephoneFirst(message.description, message.meaning, "[图片]"));
+  } else if (type === "sticker") {
+    data.mediaType = "sticker";
+    data.mediaData = {
+      stickerUrl: typeof rawContent === "string" ? rawContent : ephoneText(message.imageUrl),
+      label: ephoneText(ephoneFirst(message.meaning, message.description, message.name, "表情")),
+    };
+    content = ephoneText(ephoneFirst(message.meaning, message.description, "[表情]"));
+  } else if (type === "voice_message") {
+    data.mediaType = "audio";
+    content = ephoneText(ephoneFirst(content, message.meaning, "[语音消息]"));
+  } else if (type === "quote_reply") {
+    data.mediaType = "quote";
+    data.mediaData = { quotePreview: ephoneText(message.quote) };
+  } else if (type === "pat_message") {
+    data.mediaType = "poke";
+    data.mediaData = {
+      pokeSender: ephoneText(message.senderName),
+      pokeTarget: ephoneText(message.recipientName),
+    };
+  } else if (type === "red_packet") {
+    data.mediaType = "red_packet";
+    data.mediaData = { amount: Number(message.amount) || 0, label: ephoneText(message.note) };
+  } else if (type === "transfer") {
+    data.mediaType = "transfer";
+    data.mediaData = { amount: Number(message.amount) || 0, label: ephoneText(message.note) };
+  }
+
+  if (!content.trim()) {
+    content = ephoneText(ephoneFirst(
+      message.description,
+      message.meaning,
+      message.note,
+      message.reason,
+      message.title,
+      message.name,
+      message.payload ? ephoneJsonText(message.payload) : "",
+      type ? `[${type}]` : "",
+    ));
+  }
+  if (!content.trim() && !data.mediaType) return null;
+  return { content, ...data };
+}
+
+function ephoneDataUrlBytes(dataUrl) {
+  const match = /^data:([^;,]*);base64,(.*)$/is.exec(dataUrl);
+  if (!match) return null;
+  const base64 = match[2].replace(/\s/g, "");
+  const byteLength = Math.max(0, Math.floor(base64.length * 3 / 4) - (base64.endsWith("==") ? 2 : base64.endsWith("=") ? 1 : 0));
+  const bytes = new Uint8Array(byteLength);
+  const chunkChars = 256 * 1024;
+  let offset = 0;
+  for (let index = 0; index < base64.length; index += chunkChars) {
+    const chunk = atob(base64.slice(index, index + chunkChars));
+    for (let j = 0; j < chunk.length && offset < bytes.length; j += 1) bytes[offset++] = chunk.charCodeAt(j);
+  }
+  return { mimeType: match[1] || "application/octet-stream", bytes };
+}
+
+async function ephonePortableMedia(value, zip, cache) {
+  if (typeof value !== "string" || value.length < 2048 || !value.startsWith("data:")) return value || null;
+  if (cache.has(value)) return cache.get(value);
+  const decoded = ephoneDataUrlBytes(value);
+  if (!decoded) return value;
+  const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", decoded.bytes));
+  const ref = Array.from(digest, byte => byte.toString(16).padStart(2, "0")).join("");
+  zip.file(`media/${ref}.bin`, decoded.bytes, { compression: "STORE" });
+  const marker = {
+    __aiPhoneMediaRef: true,
+    mimeType: decoded.mimeType,
+    ref,
+    encoding: "dataurl",
+  };
+  cache.set(value, marker);
+  return marker;
+}
+
+function ephoneParseWorldBookEntries(book) {
+  let entries = book?.content;
+  if (typeof entries === "string") {
+    try { entries = JSON.parse(entries); } catch { entries = [{ content: entries }]; }
+  }
+  if (!Array.isArray(entries)) entries = entries && typeof entries === "object" ? Object.values(entries) : [];
+  return entries;
+}
+
+function ephoneModuleRecords(module) {
+  return module.sources.reduce((total, source) => {
+    if (source.type === "indexeddb") return total + source.stores.reduce((sum, store) => sum + store.records.length, 0);
+    return total + ephoneArray(source.records).length;
+  }, 0);
+}
+
+async function ephoneToFloat(buffer, options) {
+  It(6, "正在读取 ePhone / 兔K机 / 330 Legacy JSON…");
+  let bytes = new Uint8Array(buffer);
+  buffer = null;
+  let jsonText = new TextDecoder("utf-8").decode(bytes);
+  bytes = null;
+  if (jsonText.charCodeAt(0) === 0xfeff) jsonText = jsonText.slice(1);
+
+  It(14, "正在解析备份；大文件请耐心等待…");
+  let parsed;
+  try { parsed = JSON.parse(jsonText); } catch { throw new Error("ePhone JSON 无法解析，文件可能不完整或已损坏"); }
+  jsonText = null;
+  const sourceVersion = parsed?.version ?? parsed?.data?.version ?? "兼容";
+  const root = parsed?.data && typeof parsed.data === "object" ? parsed.data : parsed;
+  parsed = null;
+  const knownTables = ["chats", "worldBooks", "apiConfig", "qzoneSettings", "qzonePosts", "npcs"];
+  if (!root || typeof root !== "object" || !knownTables.some(key => Array.isArray(root[key]))) {
+    throw new Error("不是受支持的 ePhone / 兔K机 / 330 Legacy 备份");
+  }
+
+  const chats = ephoneArray(root.chats);
+  const privateChats = chats.filter(chat => chat && chat.isGroup !== true);
+  const groupChats = chats.filter(chat => chat && chat.isGroup === true);
+  const zip = new Vr();
+  const mediaCache = new Map();
+  const now = Date.now();
+  const characters = [];
+  const rawCharacterIds = new Map();
+  const namesToCharacterIds = new Map();
+
+  const registerName = (name, id) => {
+    const key = ephoneNameKey(name);
+    if (key && !namesToCharacterIds.has(key)) namesToCharacterIds.set(key, id);
+  };
+
+  const addCharacter = async ({ rawId, name, persona, avatar, createdAt, sourceTag = "ePhone" }) => {
+    const rawKey = ephoneText(rawId);
+    if (rawKey && rawCharacterIds.has(rawKey)) {
+      const existingId = rawCharacterIds.get(rawKey);
+      registerName(name, existingId);
+      return existingId;
+    }
+    const id = ephoneSafeId("ephone_char", rawKey || name, characters.length + 1);
+    const uniqueId = characters.some(item => item.id === id) ? `${id}_${characters.length + 1}` : id;
+    characters.push({
+      id: uniqueId,
+      name: ephoneText(name || `角色${characters.length + 1}`),
+      avatar: await ephonePortableMedia(avatar, zip, mediaCache),
+      persona: ephoneText(persona),
+      tags: [sourceTag],
+      createdAt: ephoneIso(createdAt, now),
+      updatedAt: ephoneIso(now),
+    });
+    if (rawKey) rawCharacterIds.set(rawKey, uniqueId);
+    registerName(name, uniqueId);
+    return uniqueId;
+  };
+
+  It(24, "正在还原角色卡与群成员…");
+  for (let index = 0; index < privateChats.length; index += 1) {
+    const chat = privateChats[index];
+    const settings = ephoneObject(chat.settings);
+    const firstTimestamp = ephoneArray(chat.history)[0]?.timestamp || root.timestamp || now;
+    await addCharacter({
+      rawId: chat.id,
+      name: ephoneFirst(chat.name, chat.realName, chat.originalName, `角色${index + 1}`),
+      persona: ephoneFirst(settings.aiPersona, settings["ai-persona"], chat.persona),
+      avatar: ephoneFirst(settings.aiAvatar, settings["ai-avatar"], chat.avatar),
+      createdAt: firstTimestamp,
+    });
+    registerName(chat.realName, rawCharacterIds.get(ephoneText(chat.id)));
+    registerName(chat.originalName, rawCharacterIds.get(ephoneText(chat.id)));
+  }
+
+  for (const group of groupChats) {
+    for (const member of ephoneArray(group.members)) {
+      const id = await addCharacter({
+        rawId: member.id,
+        name: ephoneFirst(member.groupNickname, member.originalName, member.name, "群成员"),
+        persona: member.persona,
+        avatar: member.avatar,
+        createdAt: ephoneArray(group.history)[0]?.timestamp || now,
+        sourceTag: "ePhone群成员",
+      });
+      registerName(member.groupNickname, id);
+      registerName(member.originalName, id);
+    }
+  }
+
+  const extraNpcRecords = [
+    ...ephoneArray(root.npcs),
+    ...privateChats.flatMap(chat => ephoneArray(chat.npcLibrary)),
+  ];
+  for (const npc of extraNpcRecords) {
+    await addCharacter({
+      rawId: npc.id,
+      name: ephoneFirst(npc.name, "NPC"),
+      persona: npc.persona,
+      avatar: npc.avatar,
+      createdAt: now,
+      sourceTag: "ePhone NPC",
+    });
+  }
+
+  const qzoneProfile = ephoneArray(root.qzoneSettings)[0] || {};
+  const personaProfile = ephoneArray(root.personaPresets)[0] || {};
+  const userIdentityId = "ephone_user_identity";
+  const userIdentities = [{
+    id: userIdentityId,
+    name: ephoneText(ephoneFirst(qzoneProfile.nickname, root.userName, "我")),
+    avatarUrl: await ephonePortableMedia(ephoneFirst(qzoneProfile.avatar, personaProfile.avatar), zip, mediaCache),
+    bio: "",
+    gender: "",
+    age: "",
+    occupation: "",
+    customSettings: ephoneText(personaProfile.persona),
+  }];
+
+  It(36, "正在转换私聊与群聊消息…");
+  const contacts = [];
+  const sessions = [];
+  const messages = [];
+  let skippedControlMessages = 0;
+
+  const addMessage = async (message, sessionId, order, groupNameMap) => {
+    const payload = ephoneMessagePayload(ephoneObject(message), options.stripStatus !== false);
+    if (!payload) { skippedControlMessages += 1; return; }
+    if (payload.mediaUrl) payload.mediaUrl = await ephonePortableMedia(payload.mediaUrl, zip, mediaCache);
+    if (payload.mediaData?.stickerUrl) {
+      payload.mediaData.stickerUrl = await ephonePortableMedia(payload.mediaData.stickerUrl, zip, mediaCache);
+    }
+    const role = message.role === "user" ? "user" : message.role === "system" ? "system" : "assistant";
+    const record = {
+      id: ephoneSafeId("ephone_msg", `${sessionId}_${message.id || order}`, order),
+      sessionId,
+      role,
+      content: payload.content,
+      status: "read",
+      createdAt: ephoneIso(message.timestamp, now + order),
+      order,
+      ...Object.fromEntries(Object.entries(payload).filter(([key]) => key !== "content")),
+    };
+    if (role === "assistant" && groupNameMap) {
+      const senderId = groupNameMap.get(ephoneNameKey(message.senderName)) || namesToCharacterIds.get(ephoneNameKey(message.senderName));
+      if (senderId) record.senderCharacterId = senderId;
+      if (message.senderName) record.senderName = ephoneText(message.senderName);
+    }
+    messages.push(record);
+  };
+
+  for (const chat of privateChats) {
+    const characterId = rawCharacterIds.get(ephoneText(chat.id));
+    if (!characterId) continue;
+    const history = ephoneArray(chat.history).slice().sort((a, b) => ephoneTime(a?.timestamp) - ephoneTime(b?.timestamp));
+    const sessionId = ephoneSafeId("ephone_session", chat.id, sessions.length + 1);
+    contacts.push({ id: characterId, characterId, nickname: ephoneText(chat.name), addedAt: ephoneIso(history[0]?.timestamp, now) });
+    const startIndex = messages.length;
+    for (let index = 0; index < history.length; index += 1) await addMessage(history[index], sessionId, index);
+    const sessionMessages = messages.slice(startIndex);
+    sessions.push({
+      id: sessionId,
+      contactId: characterId,
+      unreadCount: Number(chat.unreadCount) || 0,
+      updatedAt: ephoneIso(history.at(-1)?.timestamp, now),
+      isPinned: chat.isPinned === true,
+      alias: ephoneText(chat.name),
+      isGroup: false,
+      bilingualTranslationEnabled: true,
+      collapseBilingualTranslation: true,
+      ...(sessionMessages.length ? {
+        lastMessageId: sessionMessages.at(-1).id,
+        lastMessagePreview: sessionMessages.at(-1).content.slice(0, 80),
+      } : {}),
+    });
+  }
+
+  for (const group of groupChats) {
+    const history = ephoneArray(group.history).slice().sort((a, b) => ephoneTime(a?.timestamp) - ephoneTime(b?.timestamp));
+    const sessionId = ephoneSafeId("ephone_group", group.id, sessions.length + 1);
+    const groupNameMap = new Map();
+    const participantIds = [];
+    for (const member of ephoneArray(group.members)) {
+      let characterId = rawCharacterIds.get(ephoneText(member.id));
+      if (!characterId) characterId = namesToCharacterIds.get(ephoneNameKey(ephoneFirst(member.groupNickname, member.originalName, member.name)));
+      if (!characterId) continue;
+      if (!participantIds.includes(characterId)) participantIds.push(characterId);
+      registerName(member.groupNickname, characterId);
+      registerName(member.originalName, characterId);
+      groupNameMap.set(ephoneNameKey(member.groupNickname), characterId);
+      groupNameMap.set(ephoneNameKey(member.originalName), characterId);
+    }
+    const startIndex = messages.length;
+    for (let index = 0; index < history.length; index += 1) await addMessage(history[index], sessionId, index, groupNameMap);
+    const sessionMessages = messages.slice(startIndex);
+    const ownerId = rawCharacterIds.get(ephoneText(group.ownerId)) || "self";
+    sessions.push({
+      id: sessionId,
+      contactId: ephoneSafeId("ephone_group_contact", group.id, sessions.length + 1),
+      unreadCount: Number(group.unreadCount) || 0,
+      updatedAt: ephoneIso(history.at(-1)?.timestamp, now),
+      isPinned: group.isPinned === true,
+      isGroup: true,
+      groupName: ephoneText(group.name || "群聊"),
+      participantIds,
+      groupOwnerId: ownerId,
+      isSpectator: false,
+      bilingualTranslationEnabled: true,
+      collapseBilingualTranslation: true,
+      ...(sessionMessages.length ? {
+        lastMessageId: sessionMessages.at(-1).id,
+        lastMessagePreview: sessionMessages.at(-1).content.slice(0, 80),
+      } : {}),
+    });
+  }
+
+  It(56, "正在转换世界书、空间动态和 API 设置…");
+  const worldBookIdMap = new Map();
+  const worldBooks = ephoneArray(root.worldBooks).map((book, bookIndex) => {
+    const id = ephoneSafeId("ephone_worldbook", book.id || book.name, bookIndex + 1);
+    worldBookIdMap.set(ephoneText(book.id), id);
+    const entries = ephoneParseWorldBookEntries(book).map((entry, entryIndex) => {
+      const keys = Array.isArray(entry.keys) ? entry.keys.join(",") : ephoneText(ephoneFirst(entry.key, entry.keys));
+      return {
+        uid: ephoneSafeId("ephone_wbe", `${book.id || bookIndex}_${entry.id || entryIndex}`, entryIndex + 1),
+        key: keys,
+        content: ephoneText(entry.content),
+        comment: ephoneText(ephoneFirst(entry.comment, entry.name, `条目 ${entryIndex + 1}`)),
+        use_regex: entry.use_regex === true,
+        disable: entry.enabled === false || entry.disable === true,
+        constant: entry.constant === true,
+        position: entry.position ?? "before_char",
+        depth: Number(entry.depth) || 4,
+        probability: Number.isFinite(Number(entry.probability)) ? Number(entry.probability) : 100,
+        useProbability: entry.useProbability === true,
+        insertion_order: Number(entry.insertion_order ?? entryIndex),
+      };
+    }).filter(entry => entry.content || entry.key);
+    return {
+      id,
+      name: ephoneText(book.name || `世界书 ${bookIndex + 1}`),
+      description: "从 ePhone / 兔K机 / 330 互通备份导入",
+      createdAt: now + bookIndex,
+      updatedAt: now + bookIndex,
+      entries,
+    };
+  });
+
+  const apiBase = ephoneArray(root.apiConfig)[0] || {};
+  const apiCandidates = [
+    { ...apiBase, name: apiBase.name || "ePhone 当前配置" },
+    ...ephoneArray(root.apiPresets),
+  ].filter(item => item && (item.proxyUrl || item.apiKey || item.name));
+  const globalSettings = ephoneArray(root.globalSettings)[0] || {};
+  const apiConfigs = [];
+  const apiSeen = new Set();
+  for (let index = 0; index < apiCandidates.length; index += 1) {
+    const item = apiCandidates[index];
+    const signature = `${item.proxyUrl || ""}\u0000${item.apiKey || ""}\u0000${item.name || ""}`;
+    if (apiSeen.has(signature)) continue;
+    apiSeen.add(signature);
+    apiConfigs.push({
+      id: ephoneSafeId("ephone_api", item.id || index, index + 1),
+      name: ephoneText(item.name || `ePhone API ${index + 1}`),
+      provider: "Custom",
+      apiKey: options.keyMode === "blank" ? "" : ephoneText(item.apiKey),
+      baseUrl: ephoneText(item.proxyUrl),
+      defaultModel: ephoneText(item.model),
+      enableNativeTools: false,
+      enableImageRecognition: false,
+      enableImageGeneration: false,
+      temperature: Number(globalSettings.apiTemperature ?? 1),
+      top_p: Number(globalSettings.apiTopP ?? 1),
+      presence_penalty: Number(globalSettings.apiPresencePenalty ?? 0),
+      frequency_penalty: Number(globalSettings.apiFrequencyPenalty ?? 0),
+      openai_max_tokens: Number(globalSettings.apiMaxTokens ?? 0),
+      streamingMode: globalSettings.enableApiStream !== false,
+    });
+  }
+
+  const characterBindings = privateChats.map(chat => {
+    const settings = ephoneObject(chat.settings);
+    const linkedIds = ephoneArray(settings.linkedWorldBookIds).map(id => worldBookIdMap.get(ephoneText(id))).filter(Boolean);
+    return {
+      characterId: rawCharacterIds.get(ephoneText(chat.id)),
+      defaults: {
+        ...(apiConfigs[0] ? { apiConfigId: apiConfigs[0].id } : {}),
+        userIdentityId,
+        ...(linkedIds.length ? { worldBookIds: linkedIds } : {}),
+      },
+      appOverrides: {},
+    };
+  }).filter(binding => binding.characterId);
+  const bindingConfig = {
+    globalDefaults: {
+      ...(apiConfigs[0] ? { apiConfigId: apiConfigs[0].id } : {}),
+      userIdentityId,
+    },
+    appDefaults: {},
+    characterBindings,
+  };
+
+  const posts = [];
+  const comments = [];
+  for (let postIndex = 0; postIndex < ephoneArray(root.qzonePosts).length; postIndex += 1) {
+    const post = root.qzonePosts[postIndex];
+    const postId = ephoneSafeId("ephone_moment", post.id, postIndex + 1);
+    const characterId = rawCharacterIds.get(ephoneText(post.authorId));
+    const authorType = post.authorId === "user" ? "user" : characterId ? "character" : "npc";
+    const createdAt = ephoneIso(post.timestamp, now + postIndex);
+    const moment = {
+      id: postId,
+      authorType,
+      authorId: authorType === "user" ? "user" : characterId || ephoneSafeId("ephone_npc", post.authorId, postIndex + 1),
+      content: ephoneText(ephoneFirst(post.publicText, post.content)),
+      visibility: characters.map(item => item.id),
+      likes: [],
+      createdAt,
+    };
+    if (post.image_prompt) moment.photoDescription = ephoneText(post.image_prompt);
+    posts.push(moment);
+
+    const commentNameToId = new Map();
+    for (let commentIndex = 0; commentIndex < ephoneArray(post.comments).length; commentIndex += 1) {
+      const comment = post.comments[commentIndex];
+      const nameKey = ephoneNameKey(comment.commenterName);
+      const commentCharacterId = namesToCharacterIds.get(nameKey);
+      const commentAuthorType = commentCharacterId ? "character" : comment.commenterName === qzoneProfile.nickname ? "user" : "npc";
+      const commentId = ephoneSafeId("ephone_comment", `${post.id}_${commentIndex}`, commentIndex + 1);
+      const record = {
+        id: commentId,
+        postId,
+        authorType: commentAuthorType,
+        authorId: commentAuthorType === "user" ? "user" : commentCharacterId || ephoneSafeId("ephone_npc", comment.commenterName, commentIndex + 1),
+        ...(commentAuthorType === "npc" ? { authorName: ephoneText(comment.commenterName || "网友") } : {}),
+        content: ephoneText(comment.text),
+        createdAt: ephoneIso(comment.timestamp, ephoneTime(createdAt) + commentIndex + 1),
+      };
+      const replyTarget = commentNameToId.get(ephoneNameKey(comment.replyTo));
+      if (replyTarget) record.replyToCommentId = replyTarget;
+      comments.push(record);
+      commentNameToId.set(nameKey, commentId);
+    }
+  }
+
+  const modules = [
+    se("characters", [We([["ai_phone_characters_v1", characters]])]),
+    se("settings", [
+      Ee("AiPhoneSettingsDB", [
+        zt("presets", "id", [], []),
+        zt("worldBooks", "id", [], worldBooks),
+        zt("regexes", "id", [], []),
+      ]),
+      We([
+        ["ai_phone_api_configs_v1", apiConfigs],
+        ["ai_phone_user_identities_v1", userIdentities],
+        ["ai_phone_bindings_v1", bindingConfig],
+      ]),
+      { type: "localStorage", records: [{ key: "ai_phone_settings_idb_migrated_v1", value: "1" }] },
+    ]),
+    se("chat", [
+      Ee("AiPhoneChatDB", [
+        zt("messages", "id", [
+          { name: "sessionId", keyPath: "sessionId", unique: false, multiEntry: false },
+          { name: "createdAt", keyPath: "createdAt", unique: false, multiEntry: false },
+        ], messages),
+        zt("sessions", "id", [{ name: "contactId", keyPath: "contactId", unique: false, multiEntry: false }], sessions),
+        zt("contacts", "id", [{ name: "characterId", keyPath: "characterId", unique: false, multiEntry: false }], contacts),
+      ]),
+      { type: "localStorage", records: [{ key: "ai_phone_idb_migrated_v1", value: "1" }] },
+    ]),
+    se("social", [Ee("AiPhoneMomentsDB", [
+      zt("posts", "id", [
+        { name: "authorId", keyPath: "authorId", unique: false, multiEntry: false },
+        { name: "createdAt", keyPath: "createdAt", unique: false, multiEntry: false },
+      ], posts),
+      zt("comments", "id", [
+        { name: "postId", keyPath: "postId", unique: false, multiEntry: false },
+        { name: "createdAt", keyPath: "createdAt", unique: false, multiEntry: false },
+      ], comments),
+    ])]),
+  ];
+
+  It(72, "正在生成 Float 原生备份结构…");
+  const manifestModules = [];
+  modules.forEach((module, index) => {
+    const moduleJson = JSON.stringify(module);
+    zip.file(`modules/${module.moduleId}/${String(index).padStart(3, "0")}.json`, moduleJson);
+    manifestModules.push({
+      id: module.moduleId,
+      label: module.moduleId,
+      records: ephoneModuleRecords(module),
+      bytes: new Blob([moduleJson]).size,
+    });
+  });
+  const manifest = {
+    format: "ai-phone-backup",
+    version: 1,
+    createdAt: new Date().toISOString(),
+    origin: "ai-phone-converter-ephone",
+    modules: manifestModules,
+    totalBytes: manifestModules.reduce((sum, item) => sum + item.bytes, 0),
+    totalRecords: manifestModules.reduce((sum, item) => sum + item.records, 0),
+  };
+  zip.file("manifest.json", JSON.stringify(manifest, null, 2));
+
+  It(82, "正在压缩 Float 备份，请勿关闭页面…");
+  let lastZipPercent = -1;
+  const output = await zip.generateAsync(
+    { type: "arraybuffer", compression: "DEFLATE", compressionOptions: { level: 6 } },
+    metadata => {
+      const zipPercent = Math.floor(metadata.percent);
+      if (zipPercent === lastZipPercent) return;
+      lastZipPercent = zipPercent;
+      It(82 + Math.floor(zipPercent * 0.15), `正在压缩：${zipPercent}%`);
+    },
+  );
+
+  return {
+    out: output,
+    report: [
+      "转换完成，已生成 Float 原生备份。",
+      `来源格式：ePhone Legacy v${ephoneText(sourceVersion)}（兼容兔K机 / 330 同结构备份）`,
+      `角色卡：${characters.length}（含群成员与独立 NPC）`,
+      `私聊：${privateChats.length} 个会话`,
+      `群聊：${groupChats.length} 个会话`,
+      `聊天消息：${messages.length}`,
+      `已清理控制/思维链消息：${skippedControlMessages}`,
+      `世界书：${worldBooks.length}`,
+      `朋友圈：${posts.length} 条动态 / ${comments.length} 条评论`,
+      `用户信息：${userIdentities.length}`,
+      `API 配置：${apiConfigs.length}（${options.keyMode === "blank" ? "Key 已留空" : "含 Key"}；原备份未提供模型名时需在 Float 手动选择模型）`,
+      "ePhone 剧情、线下和旁白消息保留在原私聊/群聊，不重复创建剧情页。",
+      `未转换：贴纸库 ${ephoneArray(root.userStickers).length}、角色记忆 ${ephoneArray(root.memories).length}、通话 ${ephoneArray(root.callRecords).length}，以及外观、钱包、阅读、游戏和缓存数据。`,
+    ],
+  };
+}
+typeof self<"u"&&(self.onmessage=async({data:t})=>{try{let r,e;if(t.direction==="toNuojiji"){r=await ao(t.buffer,t.options);e=`nuojiji-backup-converted-${new Date().toISOString().slice(0,10)}.gz`}else if(t.direction==="ephoneToFloat"){r=await ephoneToFloat(t.buffer,t.options);e=`float-backup-from-ephone-${new Date().toISOString().slice(0,10)}.zip`}else{r=await ro(t.buffer,t.options);e=`float-backup-converted-${new Date().toISOString().slice(0,10)}.zip`}postMessage({type:"done",buffer:r.out,report:r.report,filename:e},[r.out])}catch(r){postMessage({type:"error",message:r instanceof Error?r.message:String(r)})}})})();
